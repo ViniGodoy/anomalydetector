@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "producer"
+version = "0.1.0"
+description = "Gaussian data point generator and SNS publisher with injected anomalies"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3>=1.36.0",
+]
+
+[project.scripts]
+producer = "producer.app:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.14.0",
+    "pytest>=8.3.0",
+    "ruff>=0.9.0",
+    "types-boto3[sns]>=1.36.0",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "COM812",  # Trailing comma missing (conflicts with formatter)
+    "CPY",     # Missing copyright notice
+    "D100",    # Missing docstring in public module
+    "D104",    # Missing docstring in public package
+    "D107",    # Missing docstring in __init__
+    "EXE",     # Executable file without shebang (Windows file mode artifacts)
+    "FIX",     # Line contains TODO/FIXME
+    "ISC001",  # Implicit string concatenation (conflicts with formatter)
+    "PLR2004", # Magic value used in comparison
+    "TD",      # TODO formatting policing
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "ANN",     # Type annotations optional in tests
+    "ARG",     # Unused arguments in fixtures/tests
+    "D",       # Missing docstrings in tests
+    "PLR",     # Refactoring rules in tests
+    "PT",      # Pytest style checks
+    "S",       # Bandit rules (asserts, non-crypto random, test credentials)
+    "SLF001",  # Private member access in tests
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.13"
+warn_unreachable = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+files = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
