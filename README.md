@@ -29,6 +29,9 @@ It was a pleasure developing this prototype. Before diving into the technical de
 3. **Human-Guided AI Collaboration**:
    I naturally leveraged artificial intelligence to accelerate development, review code, and generate docstrings. However, this collaboration was strictly guided and supervised. I carefully selected the formatters and linters, outlined the exact class architecture, designed the LocalStack infrastructure, enforced modern coding conventions, and conducted a thorough review of everything implemented. In Python, I deliberately tailored the Ruff rule suite to prevent the AI from adopting outdated idioms or antipatterns. I also made sure to specify and review critical test scenarios—particularly for the rolling window mechanics and standard deviation calculations. This rigor ensures production-grade quality and provides a dependable self-validation harness for the AI. The AI model used was **Gemini 3.8 Flash**.
 
+4. **Temporary LocalStack Auth Token**:
+   A temporary auth token for my LocalStack account was intentionally hardcoded into the configuration files. In a production environment, sensitive credentials would obviously never be committed; instead, a secure secret store (such as 1Password, AWS Secrets Manager, or HashiCorp Vault) would be used. This was done purely as a pragmatic choice to ensure that anyone evaluating the project can run it instantly with a single `docker compose` command without requiring manual environment or credential setup.
+
 I hope you enjoy the result! I am very much looking forward to discussing the architecture, implementation choices, and potential alternatives.
 
 ---
