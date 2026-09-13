@@ -16,7 +16,7 @@ public final class DataPointListener {
     this.detectionLogger = detectionLogger;
   }
 
-  @SqsListener(value = "${detector.queue-name}", acknowledgementMode = "SUCCESS")
+  @SqsListener(value = "${detector.queue-name}", acknowledgementMode = "ON_SUCCESS")
   public void onMessage(DataPoint dataPoint) {
     final var result = detector.evaluate(dataPoint.value());
     detectionLogger.log(result);
