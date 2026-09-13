@@ -1,0 +1,30 @@
+spring:
+  main:
+    banner-mode: off
+  threads:
+    virtual:
+      enabled: true
+  cloud:
+    aws:
+      region:
+        static: ${AWS_REGION:us-east-1}
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID:test}
+        secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+      endpoint: ${AWS_ENDPOINT_URL:http://localhost:4566}
+      sqs:
+        queue-not-found-strategy: FAIL
+        listener:
+          max-messages-per-poll: ${SQS_MAX_MESSAGES_PER_POLL:10}
+          max-concurrent-messages: ${SQS_MAX_CONCURRENT_MESSAGES:200}
+          poll-timeout: 10s
+
+detector:
+  queue-name: ${QUEUE_NAME:data-points-detector}
+  window-size: ${DETECTOR_WINDOW_SIZE:50}
+  z-threshold: ${DETECTOR_Z_THRESHOLD:3.0}
+  min-samples: ${DETECTOR_MIN_SAMPLES:10}
+  include-anomalies-in-window: ${DETECTOR_INCLUDE_ANOMALIES_IN_WINDOW:false}
+
+metrics:
+  report-interval: 5s
