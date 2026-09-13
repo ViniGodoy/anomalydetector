@@ -1,0 +1,67 @@
+services:
+  localstack:
+    image: ${LOCALSTACK_IMAGE:-localstack/localstack:latest}
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - LOCALSTACK_AUTH_TOKEN=${LOCALSTACK_AUTH_TOKEN:-ls-zogefecA-0958-VehE-4470-nIyIsOMA6b20}
+      - SERVICES=sns,sqs
+      - LOCALSTACK_HOST=localstack:4566
+      - SQS_ENDPOINT_STRATEGY=path
+      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+      - TOPIC_NAME=${TOPIC_NAME:-data-points}
+      - QUEUE_NAME=${QUEUE_NAME:-data-points-detector}
+      - LS_LOG=${LOCALSTACK_LS_LOG:-warn}
+      - DEBUG=${LOCALSTACK_DEBUG:-0}
+    volumes:
+      - ./localstack/init/ready.d:/etc/localstack/init/ready.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "awslocal sqs get-queue-url --queue-name \"${QUEUE_NAME:-data-points-detector}\" > /dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  producer:
+    build: ./producer
+    container_name: producer
+    depends_on:
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=${AWS_REGION:-us-east-1}
+      - SNS_TOPIC_ARN=arn:aws:sns:${AWS_REGION:-us-east-1}:000000000000:${TOPIC_NAME:-data-points}
+      - PRODUCER_MEAN=${PRODUCER_MEAN:-100.0}
+      - PRODUCER_STDDEV=${PRODUCER_STDDEV:-10.0}
+      - PRODUCER_INTERVAL_SECONDS=${PRODUCER_INTERVAL_SECONDS:-0.25}
+      - PRODUCER_BATCH_SIZE=${PRODUCER_BATCH_SIZE:-1}
+      - PRODUCER_ANOMALY_PROBABILITY=${PRODUCER_ANOMALY_PROBABILITY:-0.02}
+      - PRODUCER_ANOMALY_MIN_SIGMAS=${PRODUCER_ANOMALY_MIN_SIGMAS:-5.0}
+      - PRODUCER_ANOMALY_MAX_SIGMAS=${PRODUCER_ANOMALY_MAX_SIGMAS:-8.0}
+      - PRODUCER_SEED=${PRODUCER_SEED:-}
+      - PYTHONUNBUFFERED=1
+
+  consumer:
+    build: ./consumer
+    container_name: consumer
+    depends_on:
+      localstack:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - QUEUE_NAME=${QUEUE_NAME:-data-points-detector}
+      - DETECTOR_WINDOW_SIZE=${DETECTOR_WINDOW_SIZE:-50}
+      - DETECTOR_Z_THRESHOLD=${DETECTOR_Z_THRESHOLD:-3.0}
+      - DETECTOR_MIN_SAMPLES=${DETECTOR_MIN_SAMPLES:-10}
+      - DETECTOR_INCLUDE_ANOMALIES_IN_WINDOW=${DETECTOR_INCLUDE_ANOMALIES_IN_WINDOW:-false}
+      - SQS_MAX_CONCURRENT_MESSAGES=${SQS_MAX_CONCURRENT_MESSAGES:-200}
+      - SQS_MAX_MESSAGES_PER_POLL=${SQS_MAX_MESSAGES_PER_POLL:-10}
